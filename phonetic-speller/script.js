@@ -41,10 +41,24 @@ const input = document.getElementById('nameInput');
 const resultDiv = document.getElementById('result');
 
 input.addEventListener('input', (e) => {
-    const text = e.target.value.toUpperCase();
+    // Normalize string to decompose accents (e.g., 'é' becomes 'e' + accent mark)
+    // Then replace accent marks with empty string to get base character
+    const originalText = e.target.value;
+    const normalizedText = originalText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+
     resultDiv.innerHTML = '';
 
-    for (let char of text) {
+    // We iterate through the normalized text but we might want to display the original char?
+    // The requirement is "If the name has special alphabet it should try its best to give a phoetic sound."
+    // So 'é' should probably show as 'E Echo' or maybe 'é Echo'.
+    // Let's assume we map the normalized char to the phonetic word, but maybe display the original?
+    // But normalizedText length matches originalText length usually (unless composite characters).
+    // Let's stick to using normalized text for lookup and display to be safe and consistent with "try its best".
+
+    for (let i = 0; i < normalizedText.length; i++) {
+        const char = normalizedText[i];
+        const originalChar = originalText[i] ? originalText[i].toUpperCase() : char;
+
         if (char === ' ') {
              // Add a spacer for space
             const spacer = document.createElement('div');
@@ -57,13 +71,14 @@ input.addEventListener('input', (e) => {
         if (word) {
             const div = document.createElement('div');
             div.className = 'phonetic-word';
-            div.innerHTML = `<span class="char">${char}</span> ${word}`;
+            // Display the original char (uppercased) so user sees what they typed, but mapped to the base sound
+            div.innerHTML = `<span class="char">${originalChar}</span> ${word}`;
             resultDiv.appendChild(div);
         } else {
-             // Handle special characters if needed, or just display them
+             // Handle special characters (symbols) - no phonetic output
             const div = document.createElement('div');
             div.className = 'phonetic-word';
-            div.innerHTML = `<span class="char">${char}</span> ${char}`;
+            div.innerHTML = `<span class="char">${originalChar}</span>`;
             resultDiv.appendChild(div);
         }
     }
